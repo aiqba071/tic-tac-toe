@@ -1,0 +1,16 @@
+{
+    "testcafeTestRunner.customArguments": "--skip-js-errors -c 1 --client-scripts pageready.js",
+    "eslint.lintTask.enable": true,
+    "eslint.lintTask.options": ". -c .eslintrc.json --fix --ext .ts",
+    "eslint.validate": ["typescript"],
+    "eslint.options": { "configFile": ".eslintrc.json" },
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
+    "testlatte.filePath": "tests/",
+    "testlatte.customArguments": "--skip-js-errors -c 1 --client-scripts pageready.js",
+    "cSpell.words": [
+        "scrollable",
+        "testcafe"
+    ]
+}
