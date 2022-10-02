@@ -4,7 +4,10 @@ import './index.css';
 
 function Square(props) {
   return (
-    <button className="square" onClick={props.onClick}>
+    <button 
+        className={"square " + (props.isWinning ? "square--winning" : null)} 
+        onClick={props.onClick}
+        >
       {props.value}
     </button>
   );
@@ -14,6 +17,7 @@ class Board extends React.Component {
   renderSquare(i) {
     return (
       <Square
+        isWinning={this.props.winningSquares.includes(i)}
         value={this.props.squares[i]}
         onClick={() => this.props.onClick(i)}
       />
@@ -47,78 +51,72 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      history: [
-        {
-          squares: Array(9).fill(null)
-        }
-      ],
-      stepNumber: 0,
+      squares: Array(9).fill(null),
       xIsNext: true
     };
   }
 
   handleClick(i) {
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    const current = history[history.length - 1];
-    const squares = current.squares.slice();
+    const squares = this.state.squares;
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
-    squares[i] = this.state.xIsNext ? "X" : "O";
+    squares[i] = "X";
     this.setState({
-      history: history.concat([
-        {
-          squares: squares
-        }
-      ]),
-      stepNumber: history.length,
-      xIsNext: !this.state.xIsNext
+      squares: squares,
+      xIsNext: false
     });
+    this.cpuPlay();
   }
 
-  jumpTo(step) {
+  cpuPlay(){
+    const squares = this.state.squares;
+    if (calculateWinner(squares)) {
+      return;
+    }
+    const emptyPositions = [];
+    for( let i = 0; i < 9; i++){
+      if(squares[i] == null){
+        emptyPositions.push(i);
+      }
+    }
+    const randomIndex = Math.floor(Math.random() * emptyPositions.length);
+    const emptyCell = emptyPositions[randomIndex];
+    squares[emptyCell] = "O";
     this.setState({
-      stepNumber: step,
-      xIsNext: (step % 2) === 0
-    });
+      squares: squares,
+      xIsNext: true
+    });  
+  }
+
+  reset(){
+    this.setState({
+      squares: Array(9).fill(null),
+      xIsNext: true
+    })
   }
 
   render() {
-    const history = this.state.history;
-    const current = history[this.state.stepNumber];
-    const winner = calculateWinner(current.squares);
-
-    const moves = history.map((step, move) => {
-      const desc = move ?
-        'Go to move #' + move :
-        'Go to game start';
-      return (
-        <li key={move}>
-          <button onClick={() => this.jumpTo(move)}>{desc}</button>
-        </li>
-      );
-    });
-
+    const winner = calculateWinner(this.state.squares);
     let status;
+    const button = "Reset";
     if (winner) {
-      status = "Winner: " + winner;
-    } else {
-      status = "Next player: " + (this.state.xIsNext ? "X" : "O");
+      status = "Winner: " + winner.name;
     }
-
     return (
-      <div className="game">
-        <div className="game-board">
-          <Board
-            squares={current.squares}
-            onClick={i => this.handleClick(i)}
-          />
+        <div className="game">
+          <div className="game-board">
+            <Board
+              winningSquares={winner ? winner.line : []}
+              squares={this.state.squares}
+              onClick={i => this.handleClick(i)}
+            />
+          </div>
+          <div className="game-info">
+            <button className="reset-button" onClick={()=> this.reset()}>{button}</button>
+            <div className="winner-status">{status}</div>
+          </div>
         </div>
-        <div className="game-info">
-          <div>{status}</div>
-          <ol>{moves}</ol>
-        </div>
-      </div>
     );
   }
 }
@@ -146,7 +144,7 @@ function calculateWinner(squares) {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return {name: squares[a] == 'X'? 'Player':'CPU', line: lines[i]};
     }
   }
   return null;
